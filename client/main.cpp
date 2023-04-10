@@ -1,7 +1,3 @@
 #include "iostream"
-#include "tool.hpp"
 
-int main() {
-  test();
-  return 0;
-}
+int main() { return 0; }

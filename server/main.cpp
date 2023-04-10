@@ -3,8 +3,8 @@
 #include <iostream>
 #include <unistd.h>
 int main() {
-  chatroom::net::Socket s("0.0.0.0", 8080);
-  s.start();
+  chatroom::net::SocketStreamHost s("0.0.0.0", 8080);
+  s.listen();
 
   while (true) {
     int fd = s.accept();

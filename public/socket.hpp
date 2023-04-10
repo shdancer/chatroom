@@ -5,16 +5,35 @@
 namespace chatroom {
 namespace net {
 
-class Socket {
+class SocketStream {
 public:
-  Socket(const char *addr, in_port_t port);
-  int start();
+  //关闭socket
   int close();
-  int accept();
+  //构造函数
+  SocketStream(const char *addr, in_port_t port);
 
-private:
+protected:
   sockaddr_in addr;
   int sock_fd;
+};
+
+class SocketStreamClient : SocketStream {
+public:
+  int connect();
+  int get_sock_fd();
+  SocketStreamClient(const char *addr, in_port_t port, const char *tar_addr,
+                     in_addr_t tar_port);
+
+private:
+  sockaddr_in tar_addr;
+};
+class SocketStreamHost : SocketStream {
+public:
+  //开启socket
+  int listen();
+  //接受连接返回fd
+  int accept();
+  SocketStreamHost(const char *addr, in_port_t port);
 };
 
 } // namespace net

@@ -21,16 +21,12 @@ class SocketStreamClient : SocketStream {
 public:
   int connect();
   int get_sock_fd();
-  SocketStreamClient(const char *addr, in_port_t port, const char *tar_addr,
-                     in_addr_t tar_port);
-
-private:
-  sockaddr_in tar_addr;
+  SocketStreamClient(const char *addr, in_port_t port);
 };
 class SocketStreamHost : SocketStream {
 public:
   //开启socket
-  int listen();
+  int host();
   //接受连接返回fd
   int accept();
   SocketStreamHost(const char *addr, in_port_t port);

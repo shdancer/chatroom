@@ -4,7 +4,7 @@
 #include <unistd.h>
 int main() {
   chatroom::net::SocketStreamHost s("0.0.0.0", 8080);
-  s.listen();
+  s.host();
 
   while (true) {
     int fd = s.accept();

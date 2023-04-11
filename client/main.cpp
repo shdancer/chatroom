@@ -3,9 +3,10 @@
 #include <iostream>
 #include <ostream>
 #include <sys/socket.h>
+#include <unistd.h>
 
 int main() {
-  chatroom::net::SocketStreamClient s("0.0.0.0", 18080, "127.0.0.1", 8080);
+  chatroom::net::SocketStreamClient s("127.0.0.1", 8080);
 
   int suc = s.connect();
   int fd = s.get_sock_fd();
@@ -13,6 +14,7 @@ int main() {
   char buf[1024];
   send(fd, str, strlen(str), 0);
   recv(fd, buf, strlen(str), 0);
+  close(fd);
   std::cout << buf << std::endl;
   return 0;
 }

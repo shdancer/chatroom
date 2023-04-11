@@ -17,10 +17,6 @@ SocketStream::SocketStream(const char *addr, in_port_t port) {
   this->addr.sin_family = AF_INET;
   this->addr.sin_port = htons(port);
   this->addr.sin_addr.s_addr = inet_addr(addr);
-  int suc = bind(sock_fd, (sockaddr *)&this->addr, sizeof(sockaddr));
-  if (suc != 0) {
-    std::cerr << "bind failed: " << errno << std::endl;
-  }
 }
 
 int SocketStream::close() { return ::close(sock_fd); }
@@ -28,26 +24,26 @@ int SocketStream::close() { return ::close(sock_fd); }
 SocketStreamHost::SocketStreamHost(const char *addr, in_port_t port)
     : SocketStream(addr, port){};
 
-int SocketStreamHost::listen() { return ::listen(sock_fd, 100); }
+int SocketStreamHost::host() {
+  int suc = bind(sock_fd, (sockaddr *)&this->addr, sizeof(sockaddr));
+  if (suc != 0) {
+    std::cout << "bind failed: " << errno << std::endl;
+    return suc;
+  }
+  return ::listen(sock_fd, 100);
+}
 
 int SocketStreamHost::accept() {
   int len = sizeof(addr);
   return ::accept(sock_fd, (sockaddr *)&addr, (socklen_t *)&len);
 }
 
-SocketStreamClient::SocketStreamClient(const char *addr, in_port_t port,
-                                       const char *tar_addr, in_addr_t tar_port)
-    : SocketStream(addr, port) {
-  // std::cout << "hello" << std::endl;
-  bzero(&this->tar_addr, sizeof(this->tar_addr));
-  this->tar_addr.sin_family = AF_INET;
-  this->tar_addr.sin_port = htons(tar_port);
-  this->tar_addr.sin_addr.s_addr = inet_addr(tar_addr);
-}
+SocketStreamClient::SocketStreamClient(const char *addr, in_port_t port)
+    : SocketStream(addr, port) {}
 
 int SocketStreamClient::connect() {
-  int len = sizeof(tar_addr);
-  return ::connect(sock_fd, (const sockaddr *)&tar_addr, len);
+  int len = sizeof(addr);
+  return ::connect(sock_fd, (const sockaddr *)&addr, len);
 }
 
 int SocketStreamClient::get_sock_fd() { return sock_fd; }

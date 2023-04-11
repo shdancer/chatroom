@@ -1,6 +1,7 @@
 #include "socket.hpp"
 #include <arpa/inet.h>
 #include <iostream>
+#include <netinet/in.h>
 #include <strings.h>
 #include <sys/_types/_socklen_t.h>
 #include <sys/errno.h>
@@ -34,8 +35,9 @@ int SocketStreamHost::host() {
 }
 
 int SocketStreamHost::accept() {
-  int len = sizeof(addr);
-  return ::accept(sock_fd, (sockaddr *)&addr, (socklen_t *)&len);
+  sockaddr_in client_addr;
+  int len = sizeof(client_addr);
+  return ::accept(sock_fd, (sockaddr *)&client_addr, (socklen_t *)&len);
 }
 
 SocketStreamClient::SocketStreamClient(const char *addr, in_port_t port)

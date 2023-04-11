@@ -1,3 +1,4 @@
+#include "crp.hpp"
 #include "socket.hpp"
 #include <cstring>
 #include <iostream>
@@ -10,11 +11,13 @@ int main() {
 
   int suc = s.connect();
   int fd = s.get_sock_fd();
-  char str[] = "123";
-  char buf[1024];
-  send(fd, str, strlen(str), 0);
-  recv(fd, buf, strlen(str), 0);
-  close(fd);
-  std::cout << buf << std::endl;
+
+  chatroom::net::CRP c(fd);
+
+  char const *str = "hello world";
+  chatroom::net::CRPMessage message(std::strlen(str) + 1 + 11,
+                                    chatroom::net::CHAT, 0, 1, str);
+  c.send(&message);
+  s.close();
   return 0;
 }

@@ -1,3 +1,4 @@
+#include "crp.hpp"
 #include "socket.hpp"
 #include <cstring>
 #include <iostream>
@@ -8,9 +9,16 @@ int main() {
 
   while (true) {
     int fd = s.accept();
-    char s[1024];
-    int size = recv(fd, s, 1024, 0);
-    send(fd, s, strlen(s), 0);
+    chatroom::net::CRP c(fd);
+    chatroom::net::CRPMessage *message = nullptr;
+    while (true) {
+      message = c.receive();
+      if (message != nullptr) {
+        break;
+      }
+    }
+    message->DEBUG();
+
     close(fd);
   }
   return 0;

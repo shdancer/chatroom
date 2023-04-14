@@ -8,10 +8,13 @@ project(main)
 aux_source_directory("./client" CLIENT_SOURCES)
 aux_source_directory("./server" SERVER_SOURCES)
 aux_source_directory("./public" PUBLIC_SOURCES)
+aux_source_directory("./server/thread_pool" THREAD_POOL_SOURCES)
+
+message(${THREAD_POOL_SOURCES})
 
 include_directories("./client")
 include_directories("./server")
 include_directories("./public")
 
 add_executable(chatroom-client ${CLIENT_SOURCES} ${PUBLIC_SOURCES})
-add_executable(chatroom-server ${SERVER_SOURCES} ${PUBLIC_SOURCES})
+add_executable(chatroom-server ${SERVER_SOURCES} ${PUBLIC_SOURCES} ${THREAD_POOL_SOURCES})

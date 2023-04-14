@@ -61,30 +61,33 @@ void CRPMessage::DEBUG() {
 
 CRP::CRP(int fd) : fd(fd), pointer(0) {}
 
-CRPMessage *CRP::receive() {
+int CRP::receive(CRPMessage *message) {
   int n = recv(fd, buf + pointer, 4096 - pointer, 0);
+  if (n == 0 && pointer == 0) {
+    return -1;
+  }
+
   if (n > 0) {
     pointer += n;
   }
 
   std::cout << "recv: " << n << std::endl;
   if (pointer < 2) {
-    return nullptr;
+    return 1;
   }
   int len = CRPMessage::peek_length(buf);
   if (pointer < len) {
-    return nullptr;
+    return 1;
   }
 
-  CRPMessage *message = new CRPMessage;
   message->unmarshal(buf, 4096);
 
   if (pointer != len) {
-    pointer -= len;
     memcpy(buf, buf + len, pointer);
   }
+  pointer -= len;
 
-  return message;
+  return 0;
 }
 
 int CRP::send(CRPMessage *msg) {

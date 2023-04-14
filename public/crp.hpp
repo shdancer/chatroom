@@ -49,7 +49,7 @@ private:
 class CRP {
 public:
   CRP(int);
-  CRPMessage *receive();
+  int receive(CRPMessage *);
   int send(CRPMessage *);
 
 private:

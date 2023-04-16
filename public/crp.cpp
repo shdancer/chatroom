@@ -3,9 +3,11 @@
 #include <_types/_uint16_t.h>
 #include <_types/_uint32_t.h>
 #include <_types/_uint8_t.h>
+#include <cstdio>
 #include <cstring>
 #include <iostream>
 #include <sys/_endian.h>
+#include <unistd.h>
 
 namespace chatroom {
 namespace net {
@@ -50,13 +52,16 @@ CRPMessage::CRPMessage(uint16_t length, uint8_t op_code, uint32_t sender,
 }
 
 void CRPMessage::DEBUG() {
-  std::cout << "{\n"
-            << "\tlength: " << length << "\n"
-            << "\top_code: " << (int)op_code << "\n"
-            << "\tsender: " << sender << "\n"
-            << "\treceiver: " << receiver << "\n"
-            << "\tdata: " << data << "\n"
-            << "}\n";
+  // std::cout << "{\n"
+  //           << "\tlength: " << length << "\n"
+  //           << "\top_code: " << (int)op_code << "\n"
+  //           << "\tsender: " << sender << "\n"
+  //           << "\treceiver: " << receiver << "\n"
+  //           << "\tdata: " << data << "\n"
+  //           << "}\n";
+  printf("{\n\tlength: %d\n\top_code: %d\n\tsender: %d\n\treceiver: "
+         "%d\n\tdata: %s\n}\n",
+         length, (int)op_code, sender, receiver, data);
 }
 
 CRP::CRP(int fd) : fd(fd), pointer(0) {}
@@ -82,7 +87,7 @@ int CRP::receive(CRPMessage *message) {
 
   message->unmarshal(buf, 4096);
 
-  if (pointer != len) {
+  if (pointer > len) {
     memcpy(buf, buf + len, pointer);
   }
   pointer -= len;
@@ -95,5 +100,8 @@ int CRP::send(CRPMessage *msg) {
   return ::send(fd, buf, msg->get_length(), 0);
 }
 
+int CRP::close() { return ::close(fd); }
+
+int CRP::get_fd() { return fd; }
 } // namespace net
 } // namespace chatroom

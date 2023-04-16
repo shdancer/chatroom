@@ -31,6 +31,7 @@ int SocketStreamHost::host() {
     std::cout << "bind failed: " << errno << std::endl;
     return suc;
   }
+  std::cout << "listen on fd: " << sock_fd << std::endl;
   return ::listen(sock_fd, 100);
 }
 
@@ -48,7 +49,7 @@ int SocketStreamClient::connect() {
   return ::connect(sock_fd, (const sockaddr *)&addr, len);
 }
 
-int SocketStreamClient::get_sock_fd() { return sock_fd; }
+int SocketStream::get_sock_fd() { return sock_fd; }
 
 } // namespace net
 } // namespace chatroom

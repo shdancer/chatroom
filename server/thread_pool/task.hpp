@@ -11,6 +11,7 @@ class Task {
 public:
   Task();
   Task(void *);
+  virtual ~Task();
 
   virtual void exec(void *) = 0;
 

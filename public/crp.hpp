@@ -51,6 +51,8 @@ public:
   CRP(int);
   int receive(CRPMessage *);
   int send(CRPMessage *);
+  int close();
+  int get_fd();
 
 private:
   int fd;

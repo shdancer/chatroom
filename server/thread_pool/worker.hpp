@@ -24,6 +24,7 @@ public:
       pthread_mutex_unlock(&tp->q_mutex);
 
       task->exec(task->args);
+      delete task;
     }
     return nullptr;
   }

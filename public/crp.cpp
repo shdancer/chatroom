@@ -100,8 +100,14 @@ int CRP::send(CRPMessage *msg) {
   return ::send(fd, buf, msg->get_length(), 0);
 }
 
-int CRP::close() { return ::close(fd); }
+int CRP::close() {
+  pointer = 0;
+  return ::close(fd);
+}
 
 int CRP::get_fd() { return fd; }
+
+void CRP::set_fd(int fd) { this->fd = fd; }
+
 } // namespace net
 } // namespace chatroom

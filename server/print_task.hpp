@@ -1,5 +1,6 @@
 #include "crp.hpp"
 #include "server.hpp"
+#include <cstdio>
 #include <iostream>
 #include <pthread.h>
 #include <unistd.h>
@@ -24,6 +25,9 @@ public:
     int res = c->receive(&message);
     if (res == -1) {
       c->close();
+      delete server->get_fd_crp()[c->get_fd()];
+      std::cout << "closed: " << c->get_fd() << std::endl;
+      return;
     }
     if (res == 0) {
       message.DEBUG();

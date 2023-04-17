@@ -53,6 +53,7 @@ public:
   int send(CRPMessage *);
   int close();
   int get_fd();
+  void set_fd(int);
 
 private:
   int fd;

@@ -15,10 +15,10 @@ public:
     std::cout << "accepted on fd: ";
 
     pthread_rwlock_wrlock(server->get_rwlock());
-    chatroom::net::CRP *crp = server->get_fd_crp()[fd];
-    if (crp == nullptr) {
-      server->get_fd_crp()[fd] = new chatroom::net::CRP(fd);
-    }
+    // chatroom::net::CRP *crp = server->get_fd_crp()[fd];
+    // if (crp == nullptr) {
+    server->get_fd_crp()[fd] = new chatroom::net::CRP(fd);
+    // }
     pthread_rwlock_unlock(server->get_rwlock());
 
     pthread_mutex_lock(server->get_mutex());

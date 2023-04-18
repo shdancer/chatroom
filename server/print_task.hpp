@@ -33,9 +33,9 @@ public:
       message.DEBUG();
       std::cout << "from: " << pthread_self() << std::endl;
     }
-    pthread_mutex_lock(server->get_mutex());
+    pthread_mutex_lock(server->get_read_set_mutex());
     FD_SET(c->get_fd(), server->get_read_set());
-    pthread_mutex_unlock(server->get_mutex());
+    pthread_mutex_unlock(server->get_read_set_mutex());
   }
 
   PrintTask(void *args) : thread_pool::Task(args){};

@@ -33,14 +33,12 @@ public:
   void DEBUG();
   static int peek_length(char const *buf) { return ntohs(*(uint16_t *)buf); }
 
-private:
   // head
   uint16_t length;
   uint8_t op_code;
   uint32_t sender;
   uint32_t receiver;
   // uint8_t data[4096 - 11];
-
   // data
   uint8_t data[4096 - 11];
 };

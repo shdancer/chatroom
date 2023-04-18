@@ -1,8 +1,6 @@
 #include "server.hpp"
 #include "accept_task.hpp"
 #include "crp.hpp"
-#include "print_task.hpp"
-#include "receive_task.hpp"
 #include "thread_pool/thread_pool.hpp"
 #include <cstring>
 #include <iostream>
@@ -97,10 +95,22 @@ void Server::run() {
       pthread_rwlock_unlock(&fd_crp_rwlock);
 
       receive(crp);
+    }
 
-      // pthread_mutex_lock(&read_set_mutex);
-      // FD_CLR(fd, &read_set);
-      // pthread_mutex_unlock(&read_set_mutex);
+    for (int fd = 3; fd < 1024; fd++) {
+      if (FD_ISSET(fd, &writable_set) == 0) {
+        continue;
+      }
+      if (fd == tcp_server.get_sock_fd()) {
+        continue;
+      }
+      std::cout << "send fd: " << fd << std::endl;
+
+      pthread_rwlock_rdlock(&fd_crp_rwlock);
+      CRP *crp = fd_crp[fd];
+      pthread_rwlock_unlock(&fd_crp_rwlock);
+
+      receive(crp);
     }
   }
 }

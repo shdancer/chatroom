@@ -1,9 +1,7 @@
 #pragma once
 
 #include "thread_pool.hpp"
-#include <chrono>
 #include <pthread.h>
-#include <sys/_pthread/_pthread_t.h>
 namespace chatroom {
 namespace thread_pool {
 

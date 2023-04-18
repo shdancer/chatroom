@@ -2,8 +2,6 @@
 
 #include "queue"
 #include "task.hpp"
-#include <sys/_pthread/_pthread_cond_t.h>
-#include <sys/_pthread/_pthread_mutex_t.h>
 namespace chatroom {
 namespace thread_pool {
 

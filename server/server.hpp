@@ -4,9 +4,6 @@
 #include "map"
 #include "socket.hpp"
 #include "thread_pool/thread_pool.hpp"
-#include <sys/_pthread/_pthread_mutex_t.h>
-#include <sys/_pthread/_pthread_rwlock_t.h>
-#include <sys/_types/_fd_def.h>
 namespace chatroom {
 namespace net {
 

@@ -1,10 +1,7 @@
 #pragma once
 
-#include <_types/_uint16_t.h>
-#include <_types/_uint32_t.h>
-#include <_types/_uint8_t.h>
+#include "stdint.h"
 #include <cstring>
-#include <sys/_endian.h>
 #include <sys/socket.h>
 namespace chatroom {
 namespace net {

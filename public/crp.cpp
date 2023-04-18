@@ -1,12 +1,8 @@
 
 #include "crp.hpp"
-#include <_types/_uint16_t.h>
-#include <_types/_uint32_t.h>
-#include <_types/_uint8_t.h>
 #include <cstdio>
 #include <cstring>
 #include <iostream>
-#include <sys/_endian.h>
 #include <unistd.h>
 
 namespace chatroom {

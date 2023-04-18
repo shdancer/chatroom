@@ -12,22 +12,49 @@ namespace net {
 struct LogoutTaskData {
   CRPMessage *message_ptr;
   Server *server_ptr;
+  int fd;
 };
 
 class LogoutTask : public thread_pool::Task {
 public:
-  void exec(void *login_task_data) override {
+  void exec(void *logout_task_data) override {
 
     chatroom::net::CRPMessage *message =
-        ((LogoutTaskData *)login_task_data)->message_ptr;
+        ((LogoutTaskData *)logout_task_data)->message_ptr;
     chatroom::net::Server *server =
-        ((LogoutTaskData *)login_task_data)->server_ptr;
-    pthread_rwlock_wrlock(server->get_sender_fd_rwlock());
-    if (server->get_sender_fd()->count(message->sender)) {
-      server->get_sender_fd()->erase(message->sender);
-      std::cout << "logout succeeded" << std::endl;
-    }
+        ((LogoutTaskData *)logout_task_data)->server_ptr;
+    int fd = ((LogoutTaskData *)logout_task_data)->fd;
+
+    pthread_rwlock_rdlock(server->get_sender_fd_rwlock());
+    int exist = server->get_sender_fd()->count(message->sender);
     pthread_rwlock_unlock(server->get_sender_fd_rwlock());
+
+    if (exist) {
+      pthread_rwlock_wrlock(server->get_sender_fd_rwlock());
+      server->get_sender_fd()->erase(fd);
+      pthread_rwlock_unlock(server->get_sender_fd_rwlock());
+
+      CRPMessage *msg = new CRPMessage(14 + 11, LOGIN, 0, 0, "logout success");
+      pthread_mutex_lock(&server->get_message_queue_mutex()[fd]);
+      server->get_message_queue()[fd]->push(msg);
+      pthread_mutex_unlock(&server->get_message_queue_mutex()[fd]);
+
+      pthread_mutex_lock(server->get_write_set_mutex());
+      FD_SET(fd, server->get_write_set());
+      pthread_mutex_unlock(server->get_write_set_mutex());
+      std::cout << "logout success" << std::endl;
+    } else {
+      CRPMessage *msg = new CRPMessage(13 + 11, LOGIN, 0, 0, "no login");
+      pthread_mutex_lock(&server->get_message_queue_mutex()[fd]);
+      server->get_message_queue()[fd]->push(msg);
+      pthread_mutex_unlock(&server->get_message_queue_mutex()[fd]);
+
+      pthread_mutex_lock(server->get_write_set_mutex());
+      FD_SET(fd, server->get_write_set());
+      pthread_mutex_unlock(server->get_write_set_mutex());
+
+      std::cout << "no login" << std::endl;
+    }
 
     delete message;
   }

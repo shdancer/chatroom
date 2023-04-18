@@ -1,14 +1,13 @@
 #include "server.hpp"
 #include "accept_task.hpp"
 #include "crp.hpp"
+#include "login_task.hpp"
 #include "thread_pool/thread_pool.hpp"
+#include <cstddef>
 #include <cstring>
 #include <iostream>
 #include <pthread.h>
-#include <sys/_pthread/_pthread_mutex_t.h>
 #include <sys/_select.h>
-#include <sys/_types/_fd_def.h>
-#include <sys/_types/_timeval.h>
 
 namespace chatroom {
 namespace net {
@@ -19,6 +18,9 @@ Server::Server(const char *addr, int port, int thread_num)
   pthread_rwlock_init(&sender_fd_rwlock, nullptr);
   pthread_mutex_init(&read_set_mutex, nullptr);
   pthread_mutex_init(&write_set_mutex, nullptr);
+  for (int i = 0; i < 1024; i++) {
+    pthread_mutex_init(&message_queue_mutex[i], nullptr);
+  }
 
   memset(fd_crp, 0, sizeof(fd_crp));
 
@@ -50,16 +52,45 @@ void Server::receive(CRP *c) {
   if (res == 0) {
     switch (message->op_code) {
     case LOGIN:
-      // LoginTaskData *data = new LoginTaskData{
-      //     .server_ptr = server, .message_ptr = message, .fd = c->get_fd()};
-      // LoginTask *task = new LoginTask(data);
-      // server->get_pool()->submit(task);
+      LoginTaskData *data = new LoginTaskData{
+          .server_ptr = this, .message_ptr = message, .fd = c->get_fd()};
+      LoginTask *task = new LoginTask(data);
+      pool.submit(task);
       break;
     }
     message->DEBUG();
   }
 
   delete message;
+}
+
+void Server::send(int fd) {
+  pthread_rwlock_rdlock(&fd_crp_rwlock);
+  CRP *crp = fd_crp[fd];
+  pthread_rwlock_unlock(&fd_crp_rwlock);
+
+  CRPMessage *m = nullptr;
+
+  pthread_mutex_lock(&message_queue_mutex[fd]);
+  if (!message_queue[fd]->empty()) {
+    m = message_queue[fd]->front();
+  }
+  pthread_mutex_unlock(&message_queue_mutex[fd]);
+
+  int n = crp->send(message_queue[fd]->front());
+
+  pthread_mutex_lock(&message_queue_mutex[fd]);
+  if (n > 0) {
+    delete message_queue[fd]->front();
+    message_queue[fd]->pop();
+  }
+  pthread_mutex_unlock(&message_queue_mutex[fd]);
+
+  if (crp->get_send_pointer() == 0 && m == nullptr) {
+    pthread_mutex_lock(&write_set_mutex);
+    FD_CLR(fd, &write_set);
+    pthread_mutex_unlock(&write_set_mutex);
+  }
 }
 
 void Server::run() {
@@ -106,11 +137,7 @@ void Server::run() {
       }
       std::cout << "send fd: " << fd << std::endl;
 
-      pthread_rwlock_rdlock(&fd_crp_rwlock);
-      CRP *crp = fd_crp[fd];
-      pthread_rwlock_unlock(&fd_crp_rwlock);
-
-      receive(crp);
+      send(fd);
     }
   }
 }
@@ -120,7 +147,15 @@ int Server::accept() { return tcp_server.accept(); }
 pthread_rwlock_t *Server::get_fd_crp_rwlock() { return &fd_crp_rwlock; }
 pthread_rwlock_t *Server::get_sender_fd_rwlock() { return &sender_fd_rwlock; }
 pthread_mutex_t *Server::get_read_set_mutex() { return &read_set_mutex; }
+pthread_mutex_t *Server::get_write_set_mutex() { return &write_set_mutex; }
+pthread_mutex_t *Server::get_message_queue_mutex() {
+  return message_queue_mutex;
+}
 fd_set *Server::get_read_set() { return &read_set; }
+fd_set *Server::get_write_set() { return &write_set; }
+std::queue<CRPMessage *> **Server::get_message_queue() {
+  return message_queue;
+};
 CRP **Server::get_fd_crp() { return fd_crp; }
 thread_pool::ThreadPool *Server::get_pool() { return &pool; }
 std::map<int, int> *Server::get_sender_fd() { return &sender_fd; }

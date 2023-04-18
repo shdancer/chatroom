@@ -6,6 +6,7 @@
 #include "thread_pool/task.hpp"
 #include <cstring>
 #include <pthread.h>
+#include <sys/_pthread/_pthread_mutex_t.h>
 namespace chatroom {
 namespace net {
 
@@ -29,8 +30,28 @@ public:
       pthread_rwlock_wrlock(server->get_sender_fd_rwlock());
       server->get_sender_fd()->insert({message->sender, fd});
       pthread_rwlock_unlock(server->get_sender_fd_rwlock());
+
+      CRPMessage *msg = new CRPMessage(14 + 11, LOGIN, 0, 0, "login success");
+      pthread_mutex_lock(&server->get_message_queue_mutex()[fd]);
+      server->get_message_queue()[fd]->push(msg);
+      pthread_mutex_unlock(&server->get_message_queue_mutex()[fd]);
+
+      pthread_mutex_lock(server->get_write_set_mutex());
+      FD_SET(fd, server->get_write_set());
+      pthread_mutex_unlock(server->get_write_set_mutex());
+      std::cout << "login success" << std::endl;
+    } else {
+      CRPMessage *msg = new CRPMessage(13 + 11, LOGIN, 0, 0, "login failed");
+      pthread_mutex_lock(&server->get_message_queue_mutex()[fd]);
+      server->get_message_queue()[fd]->push(msg);
+      pthread_mutex_unlock(&server->get_message_queue_mutex()[fd]);
+
+      pthread_mutex_lock(server->get_write_set_mutex());
+      FD_SET(fd, server->get_write_set());
+      pthread_mutex_unlock(server->get_write_set_mutex());
+
+      std::cout << "login failed" << std::endl;
     }
-    std::cout << "login failed" << std::endl;
 
     delete message;
   }

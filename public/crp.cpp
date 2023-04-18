@@ -25,7 +25,7 @@ int CRPMessage::unmarshal(char const *buf, int buflen) {
 
 int CRPMessage::marshal(char *buf, int buflen) {
   if (length > buflen) {
-    return -1;
+    return 0;
   }
 
   *((uint16_t *)buf) = htons(length);
@@ -60,44 +60,54 @@ void CRPMessage::DEBUG() {
          length, (int)op_code, sender, receiver, data);
 }
 
-CRP::CRP(int fd) : fd(fd), pointer(0) {}
+CRP::CRP(int fd) : fd(fd), recv_pointer(0), send_pointer(0) {}
 
 int CRP::receive(CRPMessage *message) {
-  int n = recv(fd, buf + pointer, 4096 - pointer, 0);
-  if (n == 0 && pointer == 0) {
+  int n = recv(fd, recv_buf + recv_pointer, 4096 - recv_pointer, 0);
+  if (n == 0 && recv_pointer == 0) {
     return -1;
   }
 
   if (n > 0) {
-    pointer += n;
+    recv_pointer += n;
   }
 
   std::cout << "recv: " << n << std::endl;
-  if (pointer < 2) {
+  if (recv_pointer < 2) {
     return 1;
   }
-  int len = CRPMessage::peek_length(buf);
-  if (pointer < len) {
+  int len = CRPMessage::peek_length(recv_buf);
+  if (recv_pointer < len) {
     return 1;
   }
 
-  message->unmarshal(buf, 4096);
+  message->unmarshal(recv_buf, 4096);
 
-  if (pointer > len) {
-    memcpy(buf, buf + len, pointer);
+  if (recv_pointer > len) {
+    memcpy(recv_buf, recv_buf + len, recv_pointer - len);
   }
-  pointer -= len;
+  recv_pointer -= len;
 
   return 0;
 }
 
 int CRP::send(CRPMessage *msg) {
-  msg->marshal(buf, 4096);
-  return ::send(fd, buf, msg->get_length(), 0);
+  int m = 0;
+  if (msg != nullptr)
+    m = msg->marshal(send_buf + send_pointer, 4096 - send_pointer);
+  send_pointer += m;
+  int len = ::send(fd, send_buf, msg->get_length(), 0);
+  memcpy(send_buf, send_buf + len, send_pointer - len);
+  send_pointer -= len;
+
+  return m;
 }
 
+int CRP::get_send_pointer() { return send_pointer; }
+
 int CRP::close() {
-  pointer = 0;
+  recv_pointer = 0;
+  send_pointer = 0;
   return ::close(fd);
 }
 

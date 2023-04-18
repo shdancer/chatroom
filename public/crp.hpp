@@ -19,7 +19,7 @@ enum OP_CODE {
 // Chat Room Protocol报文
 class CRPMessage {
 public:
-  //将message写入网络,传入buf和buf长度,成功返回写入长度，不成功返回-1
+  //将message写入网络,传入buf和buf长度,成功返回写入长度，不成功返回0
   int marshal(char *, int);
   //从网络还原message,传入buf和buf长度，成功返回读出长度，不成功返回-读出长度
   int unmarshal(char const *, int);
@@ -49,11 +49,14 @@ public:
   int close();
   int get_fd();
   void set_fd(int);
+  int get_send_pointer();
 
 private:
   int fd;
-  char buf[4096];
-  int pointer;
+  char recv_buf[4096];
+  char send_buf[4096];
+  int recv_pointer;
+  int send_pointer;
 };
 
 } // namespace net

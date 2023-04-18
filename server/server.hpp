@@ -23,7 +23,7 @@ public:
   pthread_mutex_t *get_message_queue_mutex();
   fd_set *get_read_set();
   fd_set *get_write_set();
-  std::queue<CRPMessage *> **get_message_queue();
+  std::queue<CRPMessage *> *get_message_queue();
   CRP **get_fd_crp();
   thread_pool::ThreadPool *get_pool();
   std::map<int, int> *get_sender_fd();
@@ -34,7 +34,7 @@ private:
   chatroom::net::CRP *fd_crp[1024];
   std::map<int, int> sender_fd;
   chatroom::thread_pool::ThreadPool pool;
-  std::queue<CRPMessage *> *message_queue[1024];
+  std::queue<CRPMessage *> message_queue[1024];
 
   SocketStreamHost tcp_server;
   fd_set read_set;

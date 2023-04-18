@@ -2,7 +2,6 @@
 #include "thread_pool.hpp"
 #include <cstdio>
 #include <pthread.h>
-// #include <sys/_pthread/_pthread_t.h>
 
 namespace chatroom {
 namespace thread_pool {

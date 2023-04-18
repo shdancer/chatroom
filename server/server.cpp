@@ -2,6 +2,7 @@
 #include "accept_task.hpp"
 #include "crp.hpp"
 #include "login_task.hpp"
+#include "logout_task.hpp"
 #include "thread_pool/thread_pool.hpp"
 #include <cstddef>
 #include <cstring>
@@ -20,6 +21,7 @@ Server::Server(const char *addr, int port, int thread_num)
   pthread_mutex_init(&write_set_mutex, nullptr);
   for (int i = 0; i < 1024; i++) {
     pthread_mutex_init(&message_queue_mutex[i], nullptr);
+    message_queue[i] = std::queue<CRPMessage *>();
   }
 
   memset(fd_crp, 0, sizeof(fd_crp));
@@ -50,11 +52,19 @@ void Server::receive(CRP *c) {
     return;
   }
   if (res == 0) {
+    thread_pool::Task *task;
+    void *data = nullptr;
     switch (message->op_code) {
     case LOGIN:
-      LoginTaskData *data = new LoginTaskData{
+      data = new LoginTaskData{
           .server_ptr = this, .message_ptr = message, .fd = c->get_fd()};
-      LoginTask *task = new LoginTask(data);
+      task = new LoginTask(data);
+      pool.submit(task);
+      break;
+    case LOGOUT:
+      data = new LogoutTaskData{
+          .server_ptr = this, .message_ptr = message, .fd = c->get_fd()};
+      task = new LogoutTask(data);
       pool.submit(task);
       break;
     }
@@ -72,17 +82,17 @@ void Server::send(int fd) {
   CRPMessage *m = nullptr;
 
   pthread_mutex_lock(&message_queue_mutex[fd]);
-  if (!message_queue[fd]->empty()) {
-    m = message_queue[fd]->front();
+  if (!message_queue[fd].empty()) {
+    m = message_queue[fd].front();
   }
   pthread_mutex_unlock(&message_queue_mutex[fd]);
 
-  int n = crp->send(message_queue[fd]->front());
+  int n = crp->send(message_queue[fd].front());
 
   pthread_mutex_lock(&message_queue_mutex[fd]);
   if (n > 0) {
-    delete message_queue[fd]->front();
-    message_queue[fd]->pop();
+    delete message_queue[fd].front();
+    message_queue[fd].pop();
   }
   pthread_mutex_unlock(&message_queue_mutex[fd]);
 
@@ -153,9 +163,7 @@ pthread_mutex_t *Server::get_message_queue_mutex() {
 }
 fd_set *Server::get_read_set() { return &read_set; }
 fd_set *Server::get_write_set() { return &write_set; }
-std::queue<CRPMessage *> **Server::get_message_queue() {
-  return message_queue;
-};
+std::queue<CRPMessage *> *Server::get_message_queue() { return message_queue; };
 CRP **Server::get_fd_crp() { return fd_crp; }
 thread_pool::ThreadPool *Server::get_pool() { return &pool; }
 std::map<int, int> *Server::get_sender_fd() { return &sender_fd; }

@@ -36,7 +36,7 @@ public:
 
       CRPMessage *msg = new CRPMessage(14 + 11, LOGIN, 0, 0, "logout success");
       pthread_mutex_lock(&server->get_message_queue_mutex()[fd]);
-      server->get_message_queue()[fd]->push(msg);
+      server->get_message_queue()[fd].push(msg);
       pthread_mutex_unlock(&server->get_message_queue_mutex()[fd]);
 
       pthread_mutex_lock(server->get_write_set_mutex());
@@ -46,7 +46,7 @@ public:
     } else {
       CRPMessage *msg = new CRPMessage(13 + 11, LOGIN, 0, 0, "no login");
       pthread_mutex_lock(&server->get_message_queue_mutex()[fd]);
-      server->get_message_queue()[fd]->push(msg);
+      server->get_message_queue()[fd].push(msg);
       pthread_mutex_unlock(&server->get_message_queue_mutex()[fd]);
 
       pthread_mutex_lock(server->get_write_set_mutex());
